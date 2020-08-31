@@ -1,0 +1,164 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Jokes API",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/jokes": {
+            "get": {
+                "summary": "Get Jokes",
+                "description": "Gets a paginated list of jokes",
+                "operationId": "get_all_jokes",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number to retrieve",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The jokes"
+                    },
+                    "404": {
+                        "description": "Exception message"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create joke",
+                "description": "Add a new joke to the collection",
+                "operationId": "create_joke",
+                "requestBody": {
+                    "description": "JSON object with a joke",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "joke": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object",
+                                "example": {
+                                    "joke": "This is funny"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Joke created"
+                    },
+                    "404": {
+                        "description": "Could not create joke"
+                    }
+                }
+            }
+        },
+        "/jokes/{id}": {
+            "get": {
+                "summary": "Get a joke",
+                "description": "Gets a joke",
+                "operationId": "get_a_joke",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The id of the joke",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The joke"
+                    },
+                    "404": {
+                        "description": "Joke not found or exception message"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update joke",
+                "description": "Update a  joke in the collection",
+                "operationId": "update_a_joke",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The id of the joke",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "description": "JSON object with a joke",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "joke": {
+                                        "description": "Update",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object",
+                                "example": {
+                                    "joke": "This is funnier"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Joke updated"
+                    },
+                    "404": {
+                        "description": "Could not update joke or exception message"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a joke",
+                "description": "Deletes a joke",
+                "operationId": "delete_joke",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The id of the joke",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Joke deleted"
+                    },
+                    "404": {
+                        "description": "Joke not found or exception message"
+                    }
+                }
+            }
+        },
+        "/jokes/random": {
+            "get": {
+                "summary": "Get a randome joke",
+                "description": "Gets a random joke",
+                "operationId": "get_a_random_joke",
+                "responses": {
+                    "200": {
+                        "description": "A random joke"
+                    },
+                    "404": {
+                        "description": "No joke found or exception message"
+                    }
+                }
+            }
+        }
+    }
+}
