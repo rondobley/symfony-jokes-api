@@ -55,11 +55,13 @@ Configure your webserver to point to the public directory of the project (`symfo
 
 From the root dir of the project run composer:
 
-`composer update && composer install`
+`composer update --no-dev && composer install --no-dev`
 
 Create the local Sqlite DB:
 
 `php bin/console doctrine:database:create`
+
+Make sure your your new DB in the `var` directory of the project is writable by your webserver.
 
 Then create and run the migrations:
 
