@@ -32,3 +32,7 @@ services:
 
     sensio_framework_extra.view.listener:
         alias: Sensio\Bundle\FrameworkExtraBundle\EventListener\TemplateListener
+
+    App\Command\:
+        resource: '../src/Command/'
+        tags: ['console.command']
