@@ -57,8 +57,8 @@ class JokeController extends AbstractController
      *         description="Joke created"
      *     ),
      *     @OA\Response(
-     *         response=404,
-     *         description="Could not create joke"
+     *         response=500,
+     *         description="Internal Server Error"
      *     )
      * )
      */
@@ -108,8 +108,8 @@ class JokeController extends AbstractController
      *         description="The jokes"
      *     ),
      *     @OA\Response(
-     *         response=404,
-     *         description="Exception message"
+     *         response=500,
+     *         description="Internal Server Error"
      *     )
      * )
      */
@@ -150,7 +150,11 @@ class JokeController extends AbstractController
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Joke not found or exception message"
+     *         description="Joke not found"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error"
      *     )
      * )
      */
@@ -162,7 +166,7 @@ class JokeController extends AbstractController
                 return $this->json($joke->toArray(), Response::HTTP_OK);
             }
 
-            return $this->returnError("Joke not found");
+            return $this->returnError("Joke not found", Response::HTTP_NOT_FOUND);
 
         } catch (\Exception $e) {
 
@@ -187,7 +191,11 @@ class JokeController extends AbstractController
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="No joke found or exception message"
+     *         description="No joke found"
+     *     ),
+     *     OA\Response(
+     *         response=500,
+     *         description="Internal Server Error"
      *     )
      * )
      */
@@ -200,7 +208,7 @@ class JokeController extends AbstractController
             }
 
             // This should not happen, but there could possibly be zero jokes in the DB
-            return $this->returnError("No joke found");
+            return $this->returnError("No joke found", Response::HTTP_NOT_FOUND);
 
         } catch (\Exception $e) {
 
@@ -247,7 +255,11 @@ class JokeController extends AbstractController
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Could not update joke or exception message"
+     *         description="Could not update joke"
+     *     ),
+     *     OA\Response(
+     *         response=500,
+     *         description="Internal Server Error"
      *     )
      * )
      */
@@ -271,7 +283,7 @@ class JokeController extends AbstractController
                 return $this->json($updatedJoke->toArray(), Response::HTTP_OK);
             }
 
-            return $this->returnError("Joke not found");
+            return $this->returnError("Joke not found", Response::HTTP_NOT_FOUND);
 
         } catch (\Exception $e) {
 
@@ -306,7 +318,11 @@ class JokeController extends AbstractController
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Joke not found or exception message"
+     *         description="Joke not found"
+     *     ),
+     *     OA\Response(
+     *         response=500,
+     *         description="Internal Server Error"
      *     )
      * )
      */
@@ -320,7 +336,7 @@ class JokeController extends AbstractController
                 return $this->json($this->getSuccessResponseData('Joke deleted'), Response::HTTP_NO_CONTENT);
             }
 
-            return $this->returnError("Joke not found");
+            return $this->returnError("Joke not found", Response::HTTP_NOT_FOUND);
 
         } catch (\Exception $e) {
 
@@ -347,10 +363,11 @@ class JokeController extends AbstractController
      * A helper to return error responses
      *
      * @param string $message
+     * @param int $status
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    private function returnError(string $message)
+    private function returnError(string $message, int $status = Response::HTTP_INTERNAL_SERVER_ERROR)
     {
-        return $this->json(array('Success' => false, 'Message' => $message), Response::HTTP_NOT_FOUND);
+        return $this->json(array('Success' => false, 'Message' => $message), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 }
