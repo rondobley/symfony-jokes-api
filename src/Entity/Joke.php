@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\JokeRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=JokeRepository::class)
@@ -19,6 +20,7 @@ class Joke
 
     /**
      * @ORM\Column(type="text")
+     * @Assert\NotBlank(message = "You must enter a joke")
      */
     private $Joke;
 

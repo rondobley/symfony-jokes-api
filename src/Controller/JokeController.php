@@ -2,10 +2,15 @@
 
 namespace App\Controller;
 
+use App\Entity\Joke;
+use App\Repository\JokeRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\ConstraintViolationInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use OpenApi\Annotations as OA;
 
 /**
@@ -14,23 +19,24 @@ use OpenApi\Annotations as OA;
 class JokeController extends AbstractController
 {
     /**
-     * @var \App\Repository\JokeRepository
+     * @var JokeRepository
      */
     private $jokeRepository;
 
     /**
      * JokeController constructor.
      *
-     * @param \App\Repository\JokeRepository $jokeRepository
+     * @param JokeRepository $jokeRepository
      */
-    public function __construct(\App\Repository\JokeRepository $jokeRepository)
-    {
+    public function __construct(JokeRepository $jokeRepository) {
         $this->jokeRepository = $jokeRepository;
     }
 
     /**
      * @Route("/jokes", name="create_joke", methods={"POST"})
      * @param Request $request
+     * @param EntityManagerInterface $entityManager
+     * @param ValidatorInterface $validator
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      *
      * @OA\Post(
@@ -57,31 +63,37 @@ class JokeController extends AbstractController
      *         description="Joke created"
      *     ),
      *     @OA\Response(
+     *         response=400,
+     *         description="Bad request"
+     *     ),
+     *     @OA\Response(
      *         response=500,
      *         description="Internal Server Error"
      *     )
      * )
      */
-    public function create(Request $request)
+    public function create(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator)
     {
         try {
             $data = json_decode($request->getContent(), true);
             if ($data != null) {
-                // If we have valid JSON make sure we have a joke param, and if we do make sure it is text
-                if (empty($data['joke'])) {
-                    return $this->returnError('Must specify a joke');
-                } elseif (!is_string($data['joke'])) {
-                    return $this->returnError('Joke must only contain text');
+                // If we have valid JSON make sure we have a valid Joke
+                $joke = new Joke();
+                $joke->setJoke($data['joke']);
+
+                $errors = $validator->validate($joke);
+                if (count($errors) > 0) {
+                    return $this->returnError($this->getErrorMessages($errors), Response::HTTP_BAD_REQUEST);
                 }
+
+                $entityManager->persist($joke);
+                $entityManager->flush();
+
+                return $this->json($this->getSuccessResponseData('Joke created'), Response::HTTP_CREATED);
             }
-
-            $this->jokeRepository->saveJoke($data['joke']);
-
-            return $this->json($this->getSuccessResponseData('Joke created'), Response::HTTP_CREATED);
-
         } catch (\Exception $e) {
 
-            return $this->returnError($e->getMessage());
+            return $this->returnError(array($e->getMessage()));
         }
     }
 
@@ -122,7 +134,7 @@ class JokeController extends AbstractController
 
         } catch (\Exception $e) {
 
-            return $this->returnError($e->getMessage());
+            return $this->returnError(array($e->getMessage()));
         }
     }
 
@@ -166,11 +178,11 @@ class JokeController extends AbstractController
                 return $this->json($joke->toArray(), Response::HTTP_OK);
             }
 
-            return $this->returnError("Joke not found", Response::HTTP_NOT_FOUND);
+            return $this->returnError(array("Joke not found"), Response::HTTP_NOT_FOUND);
 
         } catch (\Exception $e) {
 
-            return $this->returnError($e->getMessage());
+            return $this->returnError(array($e->getMessage()));
         }
     }
 
@@ -193,7 +205,7 @@ class JokeController extends AbstractController
      *         response=404,
      *         description="No joke found"
      *     ),
-     *     OA\Response(
+     *     @OA\Response(
      *         response=500,
      *         description="Internal Server Error"
      *     )
@@ -208,11 +220,11 @@ class JokeController extends AbstractController
             }
 
             // This should not happen, but there could possibly be zero jokes in the DB
-            return $this->returnError("No joke found", Response::HTTP_NOT_FOUND);
+            return $this->returnError(array("No joke found"), Response::HTTP_NOT_FOUND);
 
         } catch (\Exception $e) {
 
-            return $this->returnError($e->getMessage());
+            return $this->returnError(array($e->getMessage()));
         }
     }
 
@@ -254,40 +266,43 @@ class JokeController extends AbstractController
      *         description="Joke updated"
      *     ),
      *     @OA\Response(
-     *         response=404,
-     *         description="Could not update joke"
+     *         response=400,
+     *         description="Bad request"
      *     ),
-     *     OA\Response(
+     *     @OA\Response(
+     *         response=404,
+     *         description="Joke not found"
+     *     ),
+     *     @OA\Response(
      *         response=500,
      *         description="Internal Server Error"
      *     )
      * )
      */
-    public function update($id, Request $request)
+    public function update($id, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator)
     {
         try {
             $data = json_decode($request->getContent(), true);
-            if ($data != null) {
-                // If we have valid JSON make sure we have a joke param, and if we do make sure it is text
-                if (empty($data['joke'])) {
-                    return $this->returnError('Must specify a joke');
-                } elseif (!is_string($data['joke'])) {
-                    return $this->returnError('Joke must only contain text');
-                }
-            }
-            $joke = $this->jokeRepository->find((int)$id);
-            if ($joke !== null) {
-                $joke->setJoke($data['joke']);
-                $updatedJoke = $this->jokeRepository->updateJoke($joke);
+            $joke = $entityManager->getRepository(Joke::class)->find($id);
 
-                return $this->json($updatedJoke->toArray(), Response::HTTP_OK);
+            if (!$joke) {
+                return $this->returnError(array("Joke not found"), Response::HTTP_NOT_FOUND);
             }
 
-            return $this->returnError("Joke not found", Response::HTTP_NOT_FOUND);
+            $joke->setJoke($data['joke']);
+
+            $errors = $validator->validate($joke);
+            if (count($errors) > 0) {
+                return $this->returnError($this->getErrorMessages($errors), Response::HTTP_BAD_REQUEST);
+            }
+
+            $entityManager->flush();
+
+            return $this->json($this->getSuccessResponseData('Joke updated'), Response::HTTP_OK);
 
         } catch (\Exception $e) {
 
-            return $this->returnError($e->getMessage());
+            return $this->returnError(array($e->getMessage()));
         }
     }
 
@@ -320,27 +335,29 @@ class JokeController extends AbstractController
      *         response=404,
      *         description="Joke not found"
      *     ),
-     *     OA\Response(
+     *     @OA\Response(
      *         response=500,
      *         description="Internal Server Error"
      *     )
      * )
      */
-    public function delete($id)
+    public function delete($id, EntityManagerInterface $entityManager)
     {
         try {
-            $joke = $this->jokeRepository->find((int)$id);
-            if ($joke !== null) {
-                $this->jokeRepository->deleteJoke($joke);
+            $joke = $entityManager->getRepository(Joke::class)->find($id);
 
-                return $this->json($this->getSuccessResponseData('Joke deleted'), Response::HTTP_NO_CONTENT);
+            if (!$joke) {
+                return $this->returnError(array("Joke not found"), Response::HTTP_NOT_FOUND);
             }
 
-            return $this->returnError("Joke not found", Response::HTTP_NOT_FOUND);
+            $entityManager->remove($joke);
+            $entityManager->flush();
+
+            return $this->json($this->getSuccessResponseData('Joke updated'), Response::HTTP_NO_CONTENT);
 
         } catch (\Exception $e) {
 
-            return $this->returnError($e->getMessage());
+            return $this->returnError(array($e->getMessage()));
         }
     }
 
@@ -358,16 +375,32 @@ class JokeController extends AbstractController
     }
 
     /**
+     * getErrorMessages
+     *
+     * @param \Symfony\Component\Validator\ConstraintViolationList $violations
+     * @return array
+     */
+    private function getErrorMessages(\Symfony\Component\Validator\ConstraintViolationList $violations)
+    {
+        $errors = array();
+        foreach ($violations->getIterator() as $error) {
+            $errors[] = $error->getMessage();
+        }
+
+        return $errors;
+    }
+
+    /**
      * returnError
      *
      * A helper to return error responses
      *
-     * @param string $message
+     * @param array $errors
      * @param int $status
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    private function returnError(string $message, int $status = Response::HTTP_INTERNAL_SERVER_ERROR)
+    private function returnError(array $errors, int $status = Response::HTTP_INTERNAL_SERVER_ERROR)
     {
-        return $this->json(array('Success' => false, 'Message' => $message), Response::HTTP_INTERNAL_SERVER_ERROR);
+        return $this->json(array('Success' => false, 'Errors' => $errors), $status);
     }
 }

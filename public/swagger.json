@@ -22,8 +22,8 @@
                     "200": {
                         "description": "The jokes"
                     },
-                    "404": {
-                        "description": "Exception message"
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             },
@@ -54,8 +54,11 @@
                     "201": {
                         "description": "Joke created"
                     },
-                    "404": {
-                        "description": "Could not create joke"
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
@@ -78,7 +81,10 @@
                         "description": "The joke"
                     },
                     "404": {
-                        "description": "Joke not found or exception message"
+                        "description": "Joke not found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             },
@@ -118,8 +124,14 @@
                     "200": {
                         "description": "Joke updated"
                     },
+                    "400": {
+                        "description": "Bad request"
+                    },
                     "404": {
-                        "description": "Could not update joke or exception message"
+                        "description": "Joke not found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             },
@@ -140,7 +152,10 @@
                         "description": "Joke deleted"
                     },
                     "404": {
-                        "description": "Joke not found or exception message"
+                        "description": "Joke not found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
@@ -155,7 +170,10 @@
                         "description": "A random joke"
                     },
                     "404": {
-                        "description": "No joke found or exception message"
+                        "description": "No joke found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }

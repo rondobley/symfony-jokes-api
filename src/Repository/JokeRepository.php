@@ -23,6 +23,9 @@ class JokeRepository extends ServiceEntityRepository
      */
     private $manager;
 
+    /**
+     * @var PaginatorInterface
+     */
     private $paginator;
 
     /**
@@ -38,6 +41,12 @@ class JokeRepository extends ServiceEntityRepository
         $this->paginator = $paginator;
     }
 
+    /**
+     * getAll
+     *
+     * @param int $page
+     * @return mixed
+     */
     public function getAll(int $page)
     {
         $allJokesQuery = $this->createQueryBuilder('j')
@@ -57,44 +66,6 @@ class JokeRepository extends ServiceEntityRepository
         $data['jokes'] = $jokes->getItems();
 
         return $data;
-    }
-
-    /**
-     * saveJoke
-     *
-     * @param $joke string
-     */
-    public function saveJoke($joke)
-    {
-        $newJoke = new Joke();
-
-        $newJoke->setJoke($joke);
-
-        $this->manager->persist($newJoke);
-        $this->manager->flush();
-    }
-
-    /**
-     * @param $joke
-     * @return Joke
-     */
-    public function updateJoke(Joke $joke)
-    {
-        $this->manager->persist($joke);
-        $this->manager->flush();
-
-        return $joke;
-    }
-
-    /**
-     * deleteJoke
-     *
-     * @param $joke Joke
-     */
-    public function deleteJoke($joke)
-    {
-        $this->manager->remove($joke);
-        $this->manager->flush();
     }
 
     /**
